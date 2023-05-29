@@ -16,17 +16,37 @@ pub async fn get_db() -> Result<GenericClient, anyhow::Error> {
     Ok(client)
 }
 
-pub async fn write_to_db(db: &GenericClient, e: Event) {
+pub async fn add_event(db: &GenericClient, e: Event) {
     db.execute(Statement::with_args(
-        "insert into calendar values (?, ?, ?, ?, ?)",
+        "insert into calendar values (?, ?, ?, ?, ?, ?)",
         args!(
             e.title,
             e.desc,
-            e.date.to_string(),
             e.prio,
+            e.date.to_string(),
+            e.time.to_string(),
             e.id.to_string()
         ),
     ))
     .await
     .expect("The insert to work");
+}
+
+pub async fn get_events(db: &GenericClient) {
+    let rs = db
+        .execute("select * from calendar")
+        .await
+        .expect("The insert to work");
+    println!("{:#?}", rs.rows)
+}
+
+pub async fn get_events_by_day(db: &GenericClient, day: String) {
+    let rs = db
+        .execute(Statement::with_args(
+            "select * from calendar where date = ? order by time",
+            args!(day),
+        ))
+        .await
+        .expect("The insert to work");
+    println!("{:#?}", rs.rows)
 }
