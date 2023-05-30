@@ -94,7 +94,10 @@ async fn event_loop(db: &GenericClient) {
                 }
             }
         }
-        _ => panic!(),
+        _ => {
+            println!("You did not enter a valid option. Quitting the program.");
+            panic!()
+        }
     }
 }
 
