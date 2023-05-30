@@ -1,4 +1,5 @@
 use chrono::{NaiveDate, NaiveTime};
+use libsql_client::Value;
 use std::{collections::HashMap, fmt::Display};
 use uuid::Uuid;
 
@@ -38,9 +39,9 @@ impl Display for Calendar {
 pub struct Event {
     pub title: String,
     pub desc: String,
+    pub prio: u8,
     pub date: NaiveDate,
     pub time: NaiveTime,
-    pub prio: u8,
     pub id: Uuid,
 }
 
@@ -52,9 +53,9 @@ impl Event {
         Event {
             title,
             desc,
+            prio,
             date: d,
             time: t,
-            prio,
             id: Uuid::new_v4(),
         }
     }
@@ -64,5 +65,43 @@ impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{}", self.title).unwrap();
         writeln!(f, "{}", self.date)
+    }
+}
+
+impl Into<Event> for Vec<Value> {
+    fn into(self) -> Event {
+        let mut title = String::new();
+        if let Value::Text { value } = self[0].clone() {
+            title = value;
+        }
+        let mut desc = String::new();
+        if let Value::Text { value } = self[1].clone() {
+            desc = value;
+        }
+        let mut prio: u8 = 0;
+        if let Value::Integer { value } = self[2].clone() {
+            prio = value as u8;
+        }
+        let mut date = String::new();
+        if let Value::Text { value } = self[3].clone() {
+            date = value;
+        }
+        let mut time = String::new();
+        if let Value::Text { value } = self[4].clone() {
+            time = value;
+        }
+        let mut id = String::new();
+        if let Value::Text { value } = self[5].clone() {
+            id = value;
+        }
+
+        Event {
+            title,
+            desc,
+            prio,
+            date: NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d").unwrap(),
+            time: NaiveTime::parse_from_str(time.as_str(), "%H:%M:%S").unwrap(),
+            id: Uuid::parse_str(id.as_str()).unwrap(),
+        }
     }
 }

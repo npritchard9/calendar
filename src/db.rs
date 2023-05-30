@@ -16,7 +16,7 @@ pub async fn get_db() -> Result<GenericClient, anyhow::Error> {
     Ok(client)
 }
 
-pub async fn add_event(db: &GenericClient, e: Event) {
+pub async fn add_event(db: &GenericClient, e: Event) -> Result<(), anyhow::Error> {
     db.execute(Statement::with_args(
         "insert into calendar values (?, ?, ?, ?, ?, ?)",
         args!(
@@ -30,17 +30,24 @@ pub async fn add_event(db: &GenericClient, e: Event) {
     ))
     .await
     .expect("The insert to work");
+    Ok(())
 }
 
-pub async fn get_events(db: &GenericClient) {
+pub async fn get_events(db: &GenericClient) -> Result<(), anyhow::Error> {
     let rs = db
         .execute("select * from calendar")
         .await
         .expect("The insert to work");
-    println!("{:#?}", rs.rows)
+    let events = rs
+        .rows
+        .iter()
+        .map(|r| r.values.clone().into())
+        .collect::<Vec<Event>>();
+    println!("events: {events:#?}");
+    Ok(())
 }
 
-pub async fn get_events_by_day(db: &GenericClient, day: String) {
+pub async fn get_events_by_day(db: &GenericClient, day: String) -> Result<(), anyhow::Error> {
     let rs = db
         .execute(Statement::with_args(
             "select * from calendar where date = ? order by time",
@@ -48,5 +55,6 @@ pub async fn get_events_by_day(db: &GenericClient, day: String) {
         ))
         .await
         .expect("The insert to work");
-    println!("{:#?}", rs.rows)
+    println!("{:#?}", rs.rows);
+    Ok(())
 }

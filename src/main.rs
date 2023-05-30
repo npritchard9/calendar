@@ -3,18 +3,12 @@ use std::io::stdin;
 pub mod db;
 pub mod models;
 
-use chrono::NaiveDate;
-
 use crate::{
     db::{add_event, get_db, get_events, get_events_by_day},
     models::*,
 };
 
-#[tokio::main]
-async fn main() {
-    // let mut c = Calendar::new();
-    let db = get_db().await.unwrap();
-
+fn get_input() -> Event {
     println!("Enter a title:");
     let mut title = String::new();
     stdin().read_line(&mut title).unwrap();
@@ -48,10 +42,13 @@ async fn main() {
     stdin().read_line(&mut prio).unwrap();
     let prio: u8 = prio.trim().parse().unwrap();
 
-    let e = Event::new(title, desc, date, time, prio);
-    add_event(&db, e.clone()).await;
-    // c.add(e);
-    // get_events(&db).await;
-    let bday = NaiveDate::from_ymd_opt(2023, 6, 12).unwrap();
-    get_events_by_day(&db, bday.to_string()).await;
+    Event::new(title, desc, date, time, prio)
+}
+
+#[tokio::main]
+async fn main() {
+    let db = get_db().await.unwrap();
+    // let e = get_input();
+    // add_event(&db, e.clone()).await;
+    get_events(&db).await.unwrap();
 }
