@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::{io::stdin, process};
 
 pub mod db;
 pub mod models;
@@ -96,7 +96,7 @@ async fn event_loop(db: &GenericClient) {
         }
         _ => {
             println!("You did not enter a valid option. Quitting the program.");
-            panic!()
+            process::exit(1);
         }
     }
 }
