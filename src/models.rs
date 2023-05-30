@@ -1,39 +1,7 @@
 use chrono::{NaiveDate, NaiveTime};
 use libsql_client::Value;
-use std::{collections::HashMap, fmt::Display};
+use std::fmt::Display;
 use uuid::Uuid;
-
-#[derive(Debug, Clone)]
-pub struct Calendar {
-    pub days: HashMap<NaiveDate, Vec<Event>>,
-}
-
-impl Calendar {
-    pub fn new() -> Self {
-        Calendar {
-            days: HashMap::new(),
-        }
-    }
-
-    pub fn add(&mut self, e: Event) {
-        self.days
-            .entry(e.date)
-            .and_modify(|day| day.push(e.clone()))
-            .or_insert(vec![e.clone()]);
-    }
-}
-
-impl Display for Calendar {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (k, v) in self.days.iter() {
-            writeln!(f, "Date: {}", k).unwrap();
-            for e in v {
-                write!(f, "{e}").unwrap();
-            }
-        }
-        Ok(())
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Event {
@@ -63,8 +31,7 @@ impl Event {
 
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.title).unwrap();
-        writeln!(f, "{}", self.date)
+        writeln!(f, "{} • {} • {}", self.title, self.date, self.time)
     }
 }
 

@@ -3,12 +3,15 @@ use std::io::stdin;
 pub mod db;
 pub mod models;
 
+use chrono::NaiveDate;
+use libsql_client::client::GenericClient;
+
 use crate::{
     db::{add_event, get_db, get_events, get_events_by_day},
     models::*,
 };
 
-fn get_input() -> Event {
+async fn create_event(db: &GenericClient) {
     println!("Enter a title:");
     let mut title = String::new();
     stdin().read_line(&mut title).unwrap();
@@ -42,13 +45,63 @@ fn get_input() -> Event {
     stdin().read_line(&mut prio).unwrap();
     let prio: u8 = prio.trim().parse().unwrap();
 
-    Event::new(title, desc, date, time, prio)
+    let e = Event::new(title, desc, date, time, prio);
+    add_event(&db, e).await.unwrap();
+}
+
+async fn get_day(db: &GenericClient) {
+    println!("Enter a date (m/d/y):");
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+
+    let date = input
+        .trim()
+        .split("/")
+        .map(|t| t.parse::<u32>().unwrap())
+        .collect::<Vec<u32>>();
+
+    let d = NaiveDate::from_ymd_opt(date[2] as i32, date[0], date[1])
+        .expect("The date needs to be correct");
+    let events = get_events_by_day(&db, d.to_string()).await.unwrap();
+    if events.is_empty() {
+        println!("\nNo events to display.\n")
+    } else {
+        println!();
+        for e in events {
+            println!("{e}")
+        }
+    }
+}
+
+async fn event_loop(db: &GenericClient) {
+    println!("1. Add an event");
+    println!("2. See events for a given day");
+    println!("3. See all events");
+    let mut input = String::new();
+    stdin().read_line(&mut input).unwrap();
+    let input = input.trim().parse::<usize>().unwrap();
+    match input {
+        1 => create_event(&db).await,
+        2 => get_day(&db).await,
+        3 => {
+            let events = get_events(&db).await.unwrap();
+            if events.is_empty() {
+                println!("\nNo events to display.\n")
+            } else {
+                println!();
+                for e in events {
+                    println!("{e}")
+                }
+            }
+        }
+        _ => panic!(),
+    }
 }
 
 #[tokio::main]
 async fn main() {
     let db = get_db().await.unwrap();
-    // let e = get_input();
-    // add_event(&db, e.clone()).await;
-    get_events(&db).await.unwrap();
+    loop {
+        event_loop(&db).await;
+    }
 }
