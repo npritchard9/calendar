@@ -74,6 +74,7 @@ async fn get_day(db: &GenericClient) {
 }
 
 async fn event_loop(db: &GenericClient) {
+    println!("Welcome, what do you need to do today?");
     println!("1. Add an event");
     println!("2. See events for a given day");
     println!("3. See all events");
