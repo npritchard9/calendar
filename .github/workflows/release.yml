@@ -1,46 +1,49 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
 
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
+    release:
+        name: Create Release
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Set up Rust
-        uses: actions/checkout@v2
+        steps:
+            - name: Set up Rust
+              uses: actions/checkout@v2
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
+            - name: Install Rust
+              uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: stable
 
-      - name: Build Binary
-        run: cargo build --release
+            - name: Get Tag Name
+              id: get_tag
+              run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+            - name: Build Binary
+              run: cargo build --release
 
-      - name: Upload Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/release/calendar
-          asset_name: calendar
-          asset_content_type: application/octet-stream
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ steps.get_tag.outputs.tag }}
+                  release_name: Release ${{ steps.get_tag.outputs.tag }}
+                  draft: false
+                  prerelease: false
 
+            - name: Upload Binary
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./target/release/calendar
+                  asset_name: calendar
+                  asset_content_type: application/octet-stream
